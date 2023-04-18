@@ -3,7 +3,7 @@ TAG?=latest
 DOCKER_FILE?=Dockerfile
 
 test:
-	go test -v -race -coverprofile cover.out ./...
+	go test -v -race -coverprofile=cover.out ./...
 
 out:
 	go tool cover -html=cover.out
