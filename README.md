@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/thirakc/ld-context-provider/branch/main/graph/badge.svg?token=GEYRR9H366)](https://codecov.io/gh/thirakc/ld-context-provider)
 # LD Context Provider
 This service implemented for serving custom JSON-LD Context that use in W3C DID 
 
