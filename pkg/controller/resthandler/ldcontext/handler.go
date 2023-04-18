@@ -42,7 +42,7 @@ func (h *Handler) GetRESTHandlers() []httpserver.HTTPHandler {
 
 func (h *Handler) CreateLDContext(c *gin.Context) {
 	var req CreateLDContextRequest
-	if err := c.Bind(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		logger.Error(err.Error())
 		c.JSON(http.StatusBadRequest, envelop.NewValidateError(ldcontextsvc.InvalidRequestErrorCode))
 		return

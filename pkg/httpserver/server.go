@@ -24,7 +24,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func New(mode, addr string, handlers ...HTTPHandler) *Server {
+func New(mode string, handlers []HTTPHandler, opts ...option) *Server {
 	gin.SetMode(mode)
 	r := gin.New()
 
@@ -41,12 +41,16 @@ func New(mode, addr string, handlers ...HTTPHandler) *Server {
 		},
 	).Handler(r)
 
-	return &Server{
-		httpServer: &http.Server{
-			Addr:    addr,
-			Handler: h,
-		},
+	httpServer := &http.Server{
+		Addr:    ":8080",
+		Handler: h,
 	}
+
+	for _, opt := range opts {
+		opt(httpServer)
+	}
+
+	return &Server{httpServer}
 }
 
 func (s *Server) Start() error {
@@ -60,4 +64,12 @@ func (s *Server) Start() error {
 		logger.Info("Server has stopped")
 	}()
 	return nil
+}
+
+type option func(*http.Server)
+
+func WithCustomPort(port string) option {
+	return func(s *http.Server) {
+		s.Addr = port
+	}
 }

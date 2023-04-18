@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"ld-context-provider/pkg/config"
 	"ld-context-provider/pkg/controller/resthandler/ldcontext"
 	ldcontextsvc "ld-context-provider/pkg/controller/service/ldcontext"
 	"ld-context-provider/pkg/httpserver"
@@ -12,31 +13,33 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/caarlos0/env/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	_ "time/tzdata"
 )
+
+var cfg config.Config
 
 func init() {
 	err := godotenv.Load("config.env")
 	if err != nil {
 		log.Printf("please consider environment variables: %s\n", err)
 	}
+
+	err = env.Parse(&cfg)
+	if err != nil {
+		log.Fatalf("unable to parse ennvironment variables: %e", err)
+	}
 }
 
 func main() {
 	logger := logz.NewLogger()
-	serverPort := os.Getenv("PORT")
-	if serverPort == "" {
-		logger.Fatal("You must set your 'PORT' environmental variable.")
-	}
-	dbUri := os.Getenv("MONGODB_URI")
-	if dbUri == "" {
-		logger.Fatal("You must set your 'MONGODB_URI' environmental variable.")
-	}
 
 	handlers := make([]httpserver.HTTPHandler, 0)
 
-	ldContextStore := ldcontextstore.NewLDContextStore(dbUri, "ldcontext", "c")
+	ldContextStore := ldcontextstore.NewLDContextStore(cfg.MongodbUri, "ldcontext", "c")
 	defer func() {
 		if err := ldContextStore.Disconnect(context.TODO()); err != nil {
 			panic(err)
@@ -47,7 +50,7 @@ func main() {
 
 	handlers = append(handlers, LDContextHandlers.GetRESTHandlers()...)
 
-	restHTTP := httpserver.New(gin.DebugMode, ":"+serverPort, handlers...)
+	restHTTP := httpserver.New(gin.DebugMode, handlers, httpserver.WithCustomPort(":"+cfg.ServerPort))
 	if err := restHTTP.Start(); err != nil {
 		logger.Panic(err.Error())
 	}
